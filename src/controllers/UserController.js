@@ -1,4 +1,4 @@
-const { generateCrypt } = require("../modules/bcrypt");
+const { generateCrypt, compareCrypt } = require("../modules/bcrypt");
 const { generateToken } = require("../modules/jsonwebtoken");
 const Validations = require("../utils/validations");
 
@@ -19,12 +19,49 @@ module.exports = class UserController {
 			res.status(201).json({
 				ok: true,
 				message: "Registered Successfully",
-				data: generateToken(user.dataValues.user_id),
+				data: generateToken({
+					id: user.dataValues.user_id,
+				}),
 			});
 		} catch (error) {
 			if ((error = "SequelizeUniqueConstraintError: Validation error")) {
 				error = "Email already exists";
 			}
+			res.status(400).json({
+				ok: false,
+				message: error + "",
+			});
+		}
+	}
+	static async UserSignInPostController(req, res) {
+		try {
+			const data = await Validations.UserLoginValidation().validateAsync(
+				req.body
+			);
+
+			const user = await req.db.users.findOne({
+				where: {
+					user_email: data.email,
+				},
+			});
+
+			if (!user) throw new Error("User not found");
+
+			const isValid = await compareCrypt(
+				data.password,
+				user.dataValues.user_password
+			);
+
+			if (!isValid) throw new Error("Password is incorrect");
+
+			res.status(200).json({
+				ok: true,
+				message: "Successfully logged",
+				data: generateToken({
+					id: user.dataValues.user_id,
+				}),
+			});
+		} catch (error) {
 			res.status(400).json({
 				ok: false,
 				message: error + "",
