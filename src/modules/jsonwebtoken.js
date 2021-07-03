@@ -6,7 +6,7 @@ module.exports.generateToken = (data) => {
 
 module.exports.checkToken = (token) => {
 	try {
-		return jwt.verify(token);
+		return jwt.verify(token, process.env.SECRET_WORD);
 	} catch (error) {
 		return false;
 	}

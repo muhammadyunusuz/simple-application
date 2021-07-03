@@ -68,4 +68,25 @@ module.exports = class UserController {
 			});
 		}
 	}
+
+	static async GetMeController(req, res) {
+		try {
+			const user = await req.user;
+
+			res.json({
+				ok: true,
+				data: {
+					name: user.user_name,
+					email: user.user_email,
+					verified: user.user_verified,
+					role: user.user_role,
+				},
+			});
+		} catch (error) {
+			res.status(400).json({
+				ok: true,
+				message: error + "",
+			});
+		}
+	}
 };
